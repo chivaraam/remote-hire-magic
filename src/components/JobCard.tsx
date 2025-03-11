@@ -2,17 +2,36 @@
 import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Briefcase, Globe, Star } from 'lucide-react';
 
 interface JobCardProps {
+  id: number;
   title: string;
   company: string;
   location: string;
   matchScore: number;
   skills: string[];
+  description?: string;
+  onApply?: (id: number, title: string) => void;
 }
 
-const JobCard = ({ title, company, location, matchScore, skills }: JobCardProps) => {
+const JobCard = ({ 
+  id, 
+  title, 
+  company, 
+  location, 
+  matchScore, 
+  skills, 
+  description,
+  onApply 
+}: JobCardProps) => {
+  const handleApply = () => {
+    if (onApply) {
+      onApply(id, title);
+    }
+  };
+
   return (
     <Card className="w-full p-6 hover:shadow-lg transition-shadow duration-300 animate-fade-in backdrop-blur-sm bg-card">
       <div className="flex justify-between items-start mb-4">
@@ -37,13 +56,24 @@ const JobCard = ({ title, company, location, matchScore, skills }: JobCardProps)
         <span>{location}</span>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      {description && (
+        <p className="mb-4 text-sm text-muted-foreground line-clamp-3">{description}</p>
+      )}
+
+      <div className="flex flex-wrap gap-2 mb-4">
         {skills.map((skill) => (
           <Badge key={skill} variant="outline" className="bg-secondary/30">
             {skill}
           </Badge>
         ))}
       </div>
+
+      <Button 
+        onClick={handleApply} 
+        className="w-full mt-2"
+      >
+        Apply Now
+      </Button>
     </Card>
   );
 };

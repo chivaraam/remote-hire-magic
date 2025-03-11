@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Briefcase, Globe, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface JobCardProps {
   id: number;
@@ -39,7 +40,11 @@ const JobCard = ({
           <Badge variant="secondary" className="mb-2">
             Remote
           </Badge>
-          <h3 className="text-xl font-semibold mb-1">{title}</h3>
+          <h3 className="text-xl font-semibold mb-1">
+            <Link to={`/job/${id}`} className="hover:text-primary">
+              {title}
+            </Link>
+          </h3>
           <div className="flex items-center text-muted-foreground">
             <Briefcase className="w-4 h-4 mr-2" />
             <span>{company}</span>
@@ -68,12 +73,21 @@ const JobCard = ({
         ))}
       </div>
 
-      <Button 
-        onClick={handleApply} 
-        className="w-full mt-2"
-      >
-        Apply Now
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button 
+          onClick={handleApply} 
+          className="flex-1"
+        >
+          Apply Now
+        </Button>
+        <Button 
+          variant="outline" 
+          className="flex-1"
+          asChild
+        >
+          <Link to={`/job/${id}`}>View Details</Link>
+        </Button>
+      </div>
     </Card>
   );
 };

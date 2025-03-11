@@ -3,6 +3,7 @@ import React from 'react';
 import Hero from '@/components/Hero';
 import SearchBar from '@/components/SearchBar';
 import JobCard from '@/components/JobCard';
+import Header from '@/components/Header';
 
 const mockJobs = [
   {
@@ -31,6 +32,7 @@ const mockJobs = [
 const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-secondary/20">
+      <Header />
       <div className="container px-4 py-16 mx-auto">
         <Hero />
         

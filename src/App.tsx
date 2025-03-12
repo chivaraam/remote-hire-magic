@@ -10,6 +10,10 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import JobDetail from "./pages/JobDetail";
 import NotFound from "./pages/NotFound";
+import ResumeParser from "./pages/ResumeParser";
+import RemoteAssessment from "./pages/RemoteAssessment";
+import InterviewScheduler from "./pages/InterviewScheduler";
+import MatchingAlgorithm from "./pages/MatchingAlgorithm";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +29,10 @@ const App = () => (
           <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/job/:id" element={<JobDetail />} />
+          <Route path="/resume-parser" element={<ResumeParser />} />
+          <Route path="/remote-assessment" element={<RemoteAssessment />} />
+          <Route path="/interview-scheduler" element={<InterviewScheduler />} />
+          <Route path="/matching-algorithm" element={<MatchingAlgorithm />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

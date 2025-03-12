@@ -1,9 +1,12 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
 import JobCard from '@/components/JobCard';
 import { useToast } from "@/hooks/use-toast";
+import { Link } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
+import { Brain, FileText, Video, Users } from 'lucide-react';
 
 // Mock jobs data (in a real app, this would come from an API)
 const allJobs = [
@@ -88,7 +91,6 @@ const Dashboard = () => {
   };
 
   const handleApply = (jobId: number, jobTitle: string) => {
-    // In a real app, this would send a request to an API
     console.log(`Applied for job ${jobId}: ${jobTitle}`);
     
     toast({
@@ -96,6 +98,33 @@ const Dashboard = () => {
       description: `You've successfully applied for ${jobTitle}`,
     });
   };
+
+  const features = [
+    {
+      icon: <Brain className="h-6 w-6 text-primary" />,
+      title: "AI-Based Candidate-Job Matching Algorithm",
+      description: "Our advanced algorithm matches your skills and preferences to the perfect remote job opportunities.",
+      path: "/matching-algorithm"
+    },
+    {
+      icon: <FileText className="h-6 w-6 text-primary" />,
+      title: "Automated Resume Parsing & Skills Extraction",
+      description: "Upload your resume once and let our system extract your skills and experiences automatically.",
+      path: "/resume-parser"
+    },
+    {
+      icon: <Users className="h-6 w-6 text-primary" />,
+      title: "Remote Readiness Assessment for Candidates",
+      description: "Take our assessment to showcase your remote work capabilities and boost your profile.",
+      path: "/remote-assessment"
+    },
+    {
+      icon: <Video className="h-6 w-6 text-primary" />,
+      title: "Integrated Video Interview Scheduling System",
+      description: "Schedule and manage your remote interviews with ease through our integrated platform.",
+      path: "/interview-scheduler"
+    }
+  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-secondary/20">
@@ -108,6 +137,27 @@ const Dashboard = () => {
           <p className="mt-4 text-muted-foreground">
             {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''} found
           </p>
+        </div>
+
+        <div className="mb-12">
+          <h2 className="text-2xl font-semibold mb-6">Premium Features</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, index) => (
+              <Card key={index} className="p-6 hover:shadow-lg transition-all duration-300 border border-border/50">
+                <div className="mb-4">
+                  {feature.icon}
+                </div>
+                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
+                <p className="text-sm text-muted-foreground mb-4">{feature.description}</p>
+                <Link 
+                  to={feature.path}
+                  className="text-sm text-primary hover:underline inline-flex items-center"
+                >
+                  Try Now <Badge variant="outline" className="ml-2">Premium</Badge>
+                </Link>
+              </Card>
+            ))}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

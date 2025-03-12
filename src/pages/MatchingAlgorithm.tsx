@@ -5,40 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { BrainCircuit } from 'lucide-react';
+import { AlertCircle, BrainCircuit, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import JobCard from '@/components/JobCard';
-
-// Mock jobs (in a real app, this would come from an API)
-const allJobs = [
-  {
-    id: 1,
-    title: "Senior Frontend Developer",
-    company: "TechCorp",
-    location: "Worldwide",
-    matchScore: 95,
-    skills: ["React", "TypeScript", "Node.js"],
-    description: "Join our team to build cutting-edge web applications using React and TypeScript."
-  },
-  {
-    id: 2,
-    title: "Product Manager",
-    company: "InnovateLabs",
-    location: "Americas",
-    matchScore: 88,
-    skills: ["Product Strategy", "Agile", "User Research"],
-    description: "Lead product development for our SaaS platform, working closely with engineering and design teams."
-  },
-  {
-    id: 3,
-    title: "UX/UI Designer",
-    company: "DesignWave",
-    location: "Europe",
-    matchScore: 92,
-    skills: ["Figma", "User Testing", "Design Systems"],
-    description: "Create beautiful and intuitive interfaces for our web and mobile applications."
-  },
-];
+import { useAiMatching, AiMatchingResponse } from '@/utils/aiService';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Mock user skills for demonstration
 const userSkills = ["React", "TypeScript", "CSS", "HTML", "JavaScript", "UI Design"];
@@ -47,33 +18,52 @@ const MatchingAlgorithm = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [matchedJobs, setMatchedJobs] = useState<any[]>([]);
+  const [analysisDetails, setAnalysisDetails] = useState<AiMatchingResponse['analysisDetails'] | null>(null);
   const { toast } = useToast();
+  const { getJobMatches, isLoading, error } = useAiMatching();
 
-  const handleFindMatches = () => {
+  const handleFindMatches = async () => {
     setIsAnalyzing(true);
     setProgress(0);
     setMatchedJobs([]);
+    setAnalysisDetails(null);
 
-    // Simulate the matching algorithm with a progress indicator
-    const interval = setInterval(() => {
+    // Simulate progress updates during AI processing
+    const progressInterval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 100) {
-          clearInterval(interval);
-          setIsAnalyzing(false);
-          
-          // Sort jobs by match score (in a real app, this would be calculated based on AI analysis)
-          const sorted = [...allJobs].sort((a, b) => b.matchScore - a.matchScore);
-          setMatchedJobs(sorted);
-          
-          toast({
-            title: "Matching Complete",
-            description: `Found ${sorted.length} matching jobs based on your profile`,
-          });
-          return 100;
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
         }
         return prev + 10;
       });
     }, 300);
+
+    try {
+      // Call the AI service with user skills
+      const result = await getJobMatches(userSkills);
+      
+      // Complete the progress
+      clearInterval(progressInterval);
+      setProgress(100);
+      
+      // Update the UI with results
+      setMatchedJobs(result.matches);
+      setAnalysisDetails(result.analysisDetails);
+      
+      toast({
+        title: "Matching Complete",
+        description: `Found ${result.matches.length} matching jobs based on your profile`,
+      });
+    } catch (err) {
+      toast({
+        title: "Matching Failed",
+        description: "There was an error finding job matches. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -102,13 +92,13 @@ const MatchingAlgorithm = () => {
             </div>
             <Button 
               onClick={handleFindMatches} 
-              disabled={isAnalyzing}
+              disabled={isAnalyzing || isLoading}
               className="w-full md:w-auto"
             >
               {isAnalyzing ? "Analyzing your profile..." : "Find My Matches"}
             </Button>
             
-            {isAnalyzing && (
+            {(isAnalyzing || isLoading) && (
               <div className="mt-4">
                 <Progress value={progress} className="h-2" />
                 <p className="text-sm text-muted-foreground mt-2">
@@ -116,8 +106,61 @@ const MatchingAlgorithm = () => {
                 </p>
               </div>
             )}
+
+            {error && (
+              <Alert variant="destructive" className="mt-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
           </CardContent>
         </Card>
+
+        {analysisDetails && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>AI Analysis</CardTitle>
+              <CardDescription>
+                Here's what our AI found about your profile
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-sm font-medium mb-2">Skills Matched</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {analysisDetails.skillsMatched.map((skill) => (
+                      <Badge key={skill} variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                        <CheckCircle2 className="mr-1 h-3 w-3" /> {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium mb-2">Missing Skills</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {analysisDetails.missingSkills.map((skill) => (
+                      <Badge key={skill} variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+                        {skill}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <h3 className="text-sm font-medium mb-2">Recommendations</h3>
+                  <ul className="list-disc pl-5 space-y-1">
+                    {analysisDetails.recommendations.map((rec, index) => (
+                      <li key={index} className="text-sm text-muted-foreground">{rec}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {matchedJobs.length > 0 && (
           <>

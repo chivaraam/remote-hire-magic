@@ -6,8 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
-import { Wifi } from 'lucide-react';
+import { AlertCircle, CheckCircle2, AlertTriangle, Wifi } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAssessmentAnalysis, AssessmentAnalysisResponse } from '@/utils/aiService';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface Question {
   id: number;
@@ -48,33 +50,37 @@ const RemoteAssessment = () => {
   const [answers, setAnswers] = useState<{[key: number]: number}>({});
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showResults, setShowResults] = useState(false);
-  const [score, setScore] = useState(0);
+  const [assessmentResults, setAssessmentResults] = useState<AssessmentAnalysisResponse | null>(null);
   const { toast } = useToast();
+  const { analyzeAssessment, isLoading, error } = useAssessmentAnalysis();
 
-  const handleAnswer = () => {
+  const handleAnswer = async () => {
     if (selectedOption === null) return;
     
-    const newAnswers = { ...answers, [currentQuestion]: selectedOption };
+    const newAnswers = { ...answers, [questions[currentQuestion].id]: selectedOption };
     setAnswers(newAnswers);
     
     if (currentQuestion < questions.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
       setSelectedOption(null);
     } else {
-      // Calculate score (in a real app, this would use a more sophisticated algorithm)
-      const totalScore = Object.values(newAnswers).reduce((sum, value) => {
-        // Assuming first option (index 0) is worth 3 points, and last option (index 3) is worth 0
-        return sum + (3 - value);
-      }, 0);
-      
-      const percentScore = Math.round((totalScore / (questions.length * 3)) * 100);
-      setScore(percentScore);
-      setShowResults(true);
-      
-      toast({
-        title: "Assessment Complete",
-        description: "Your remote work readiness score has been calculated",
-      });
+      try {
+        // All questions answered, send to AI for analysis
+        const results = await analyzeAssessment(newAnswers);
+        setAssessmentResults(results);
+        setShowResults(true);
+        
+        toast({
+          title: "Assessment Complete",
+          description: "Your remote work readiness score has been calculated",
+        });
+      } catch (err) {
+        toast({
+          title: "Assessment Analysis Failed",
+          description: "There was an error analyzing your assessment. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -83,30 +89,7 @@ const RemoteAssessment = () => {
     setAnswers({});
     setSelectedOption(null);
     setShowResults(false);
-  };
-
-  const renderFeedback = () => {
-    if (score >= 80) {
-      return {
-        title: "Excellent Remote Work Readiness",
-        description: "You have the ideal setup and skills for remote work. You're well-equipped to thrive in a distributed team environment."
-      };
-    } else if (score >= 60) {
-      return {
-        title: "Good Remote Work Readiness",
-        description: "You have most of the necessary elements for remote work success, but there are some areas where you could improve."
-      };
-    } else if (score >= 40) {
-      return {
-        title: "Average Remote Work Readiness",
-        description: "You have some of the basics in place, but there are significant areas that need improvement before you can thrive in a remote environment."
-      };
-    } else {
-      return {
-        title: "Needs Improvement",
-        description: "Your current setup and practices may make remote work challenging. Consider addressing the key improvement areas listed below."
-      };
-    }
+    setAssessmentResults(null);
   };
 
   return (
@@ -117,6 +100,14 @@ const RemoteAssessment = () => {
           <Wifi className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold">Remote Work Readiness Assessment</h1>
         </div>
+
+        {error && (
+          <Alert variant="destructive" className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
 
         <Card>
           {!showResults ? (
@@ -155,89 +146,101 @@ const RemoteAssessment = () => {
                   <Button 
                     onClick={handleAnswer}
                     className="w-full"
-                    disabled={selectedOption === null}
+                    disabled={selectedOption === null || isLoading}
                   >
-                    {currentQuestion < questions.length - 1 ? "Next Question" : "Complete Assessment"}
+                    {isLoading ? "Processing..." : currentQuestion < questions.length - 1 ? "Next Question" : "Complete Assessment"}
                   </Button>
                 </div>
               </CardContent>
             </>
           ) : (
-            <>
-              <CardHeader>
-                <CardTitle>Your Remote Work Readiness Score</CardTitle>
-                <CardDescription>
-                  Based on your answers, we've assessed your remote work readiness
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex flex-col items-center justify-center py-6">
-                  <div className="relative h-36 w-36 mb-4">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-3xl font-bold">{score}%</div>
+            assessmentResults && (
+              <>
+                <CardHeader>
+                  <CardTitle>Your Remote Work Readiness Score</CardTitle>
+                  <CardDescription>
+                    Based on your answers, our AI has assessed your remote work readiness
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex flex-col items-center justify-center py-6">
+                    <div className="relative h-36 w-36 mb-4">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-3xl font-bold">{assessmentResults.score}%</div>
+                      </div>
+                      <svg className="h-full w-full" viewBox="0 0 100 100">
+                        <circle
+                          className="text-secondary"
+                          strokeWidth="10"
+                          stroke="currentColor"
+                          fill="transparent"
+                          r="40"
+                          cx="50"
+                          cy="50"
+                        />
+                        <circle
+                          className="text-primary"
+                          strokeWidth="10"
+                          strokeDasharray={`${assessmentResults.score * 2.51} 251`}
+                          strokeLinecap="round"
+                          stroke="currentColor"
+                          fill="transparent"
+                          r="40"
+                          cx="50"
+                          cy="50"
+                        />
+                      </svg>
                     </div>
-                    <svg className="h-full w-full" viewBox="0 0 100 100">
-                      <circle
-                        className="text-secondary"
-                        strokeWidth="10"
-                        stroke="currentColor"
-                        fill="transparent"
-                        r="40"
-                        cx="50"
-                        cy="50"
-                      />
-                      <circle
-                        className="text-primary"
-                        strokeWidth="10"
-                        strokeDasharray={`${score * 2.51} 251`}
-                        strokeLinecap="round"
-                        stroke="currentColor"
-                        fill="transparent"
-                        r="40"
-                        cx="50"
-                        cy="50"
-                      />
-                    </svg>
+                    
+                    <h3 className="text-xl font-semibold">{assessmentResults.title}</h3>
+                    <p className="text-center text-muted-foreground mt-2">
+                      {assessmentResults.description}
+                    </p>
                   </div>
                   
-                  <h3 className="text-xl font-semibold">{renderFeedback().title}</h3>
-                  <p className="text-center text-muted-foreground mt-2">
-                    {renderFeedback().description}
-                  </p>
-                </div>
-                
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Key Improvement Areas:</h3>
-                  <ul className="list-disc pl-5 space-y-1">
-                    {score < 80 && (
-                      <li className="text-sm">Consider creating a more dedicated workspace to minimize distractions.</li>
-                    )}
-                    {score < 70 && (
-                      <li className="text-sm">Improve your internet connection reliability for seamless communication.</li>
-                    )}
-                    {score < 60 && (
-                      <li className="text-sm">Practice using digital communication tools more regularly.</li>
-                    )}
-                    {score < 50 && (
-                      <li className="text-sm">Develop a structured time management system to stay productive.</li>
-                    )}
-                  </ul>
-                </div>
-                
-                <div className="flex space-x-4">
-                  <Button 
-                    onClick={handleRestart}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Retake Assessment
-                  </Button>
-                  <Button className="w-full">
-                    Save to My Profile
-                  </Button>
-                </div>
-              </CardContent>
-            </>
+                  {assessmentResults.strengths.length > 0 && (
+                    <div className="space-y-2">
+                      <h3 className="font-semibold flex items-center">
+                        <CheckCircle2 className="h-4 w-4 mr-2 text-green-500" />
+                        Your Strengths:
+                      </h3>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {assessmentResults.strengths.map((strength, index) => (
+                          <li key={index} className="text-sm">{strength}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {assessmentResults.improvementAreas.length > 0 && (
+                    <div className="space-y-2">
+                      <h3 className="font-semibold flex items-center">
+                        <AlertTriangle className="h-4 w-4 mr-2 text-amber-500" />
+                        Improvement Areas:
+                      </h3>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {assessmentResults.improvementAreas.map((area, index) => (
+                          <li key={index} className="text-sm">{area}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  <div className="flex space-x-4">
+                    <Button 
+                      onClick={handleRestart}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Retake Assessment
+                    </Button>
+                    <Button className="w-full">
+                      Save to My Profile
+                    </Button>
+                  </div>
+                </CardContent>
+              </>
+            )
           )}
         </Card>
       </div>

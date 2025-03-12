@@ -5,23 +5,18 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { FileText, Upload, Check } from 'lucide-react';
+import { AlertCircle, FileText, Upload, Check, BarChart2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface ParsedResume {
-  name: string;
-  email: string;
-  phone: string;
-  skills: string[];
-  experience: string[];
-  education: string[];
-}
+import { useResumeParser, ResumeParsingResponse } from '@/utils/aiService';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const ResumeParser = () => {
   const [file, setFile] = useState<File | null>(null);
-  const [isParsing, setIsParsing] = useState(false);
-  const [parsedData, setParsedData] = useState<ParsedResume | null>(null);
+  const [parsedData, setParsedData] = useState<ResumeParsingResponse | null>(null);
+  const [parsingProgress, setParsingProgress] = useState(0);
   const { toast } = useToast();
+  const { parseResume, isLoading, error } = useResumeParser();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -29,7 +24,7 @@ const ResumeParser = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!file) {
@@ -41,33 +36,43 @@ const ResumeParser = () => {
       return;
     }
 
-    setIsParsing(true);
+    // Reset progress and data
+    setParsingProgress(0);
+    setParsedData(null);
 
-    // Simulate resume parsing (in a real app, this would send the file to a parsing API)
-    setTimeout(() => {
-      // Mock parsed data
-      setParsedData({
-        name: "Jane Smith",
-        email: "jane.smith@example.com",
-        phone: "(555) 123-4567",
-        skills: ["React", "TypeScript", "JavaScript", "Node.js", "CSS", "HTML", "UI/UX Design"],
-        experience: [
-          "Senior Frontend Developer at TechCorp (2020-Present)",
-          "Web Developer at DesignStudio (2018-2020)",
-          "Junior Developer at StartupX (2016-2018)"
-        ],
-        education: [
-          "BS Computer Science, University of Technology (2012-2016)"
-        ]
+    // Simulate progress updates during AI processing
+    const progressInterval = setInterval(() => {
+      setParsingProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return 90;
+        }
+        return prev + 10;
       });
+    }, 200);
+
+    try {
+      // Call the AI service
+      const result = await parseResume(file);
       
-      setIsParsing(false);
+      // Complete the progress
+      clearInterval(progressInterval);
+      setParsingProgress(100);
+      
+      // Update the UI with results
+      setParsedData(result);
       
       toast({
         title: "Resume Parsed Successfully",
         description: "Your skills and experience have been extracted",
       });
-    }, 2000);
+    } catch (err) {
+      toast({
+        title: "Parsing Failed",
+        description: "There was an error parsing your resume. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSaveToProfile = () => {
@@ -121,12 +126,30 @@ const ResumeParser = () => {
                     </p>
                   )}
                 </div>
+                
+                {isLoading && (
+                  <div className="mt-4">
+                    <Progress value={parsingProgress} className="h-2" />
+                    <p className="text-sm text-muted-foreground mt-2">
+                      AI is parsing your resume...
+                    </p>
+                  </div>
+                )}
+
+                {error && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+                
                 <Button 
                   type="submit" 
                   className="w-full"
-                  disabled={!file || isParsing}
+                  disabled={!file || isLoading}
                 >
-                  {isParsing ? "Parsing Resume..." : "Parse Resume"}
+                  {isLoading ? "Parsing Resume..." : "Parse Resume"}
                 </Button>
               </form>
             </CardContent>
@@ -136,8 +159,12 @@ const ResumeParser = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Extracted Information</CardTitle>
-                <CardDescription>
-                  Here's what we've extracted from your resume
+                <CardDescription className="flex items-center">
+                  <span>AI confidence score: </span>
+                  <span className="ml-1 font-medium">
+                    {Math.round(parsedData.confidence * 100)}%
+                  </span>
+                  <BarChart2 className="h-4 w-4 ml-2 text-primary" />
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

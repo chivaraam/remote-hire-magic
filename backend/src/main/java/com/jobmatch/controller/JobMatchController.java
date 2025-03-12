@@ -2,6 +2,7 @@
 package com.jobmatch.controller;
 
 import com.jobmatch.dto.JobDTO;
+import com.jobmatch.dto.UserDTO;
 import com.jobmatch.model.JobMatch;
 import com.jobmatch.service.JobMatchService;
 import org.springframework.beans.factory.annotation.Autowired;

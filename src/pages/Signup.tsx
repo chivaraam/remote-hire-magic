@@ -14,28 +14,56 @@ const Signup = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // This is a mock signup - would connect to backend in production
-    setTimeout(() => {
-      if (name && email && password) {
+    try {
+      const response = await fetch('http://localhost:8080/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          name,
+          email, 
+          password,
+          skills: [] // Initialize with empty skills
+        }),
+        credentials: 'include'
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Store auth token and user data
         localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
         toast({
           title: "Account created",
           description: "Welcome to JobMatch AI!",
         });
+        
         navigate('/');
       } else {
+        const errorData = await response.json().catch(() => null);
         toast({
           variant: "destructive",
           title: "Signup failed",
-          description: "Please fill in all fields and try again.",
+          description: errorData?.message || "Please fill in all fields and try again.",
         });
       }
+    } catch (error) {
+      console.error('Signup error:', error);
+      toast({
+        variant: "destructive",
+        title: "Signup failed",
+        description: "An error occurred. Please try again later.",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

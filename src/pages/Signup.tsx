@@ -5,17 +5,46 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from "@/hooks/use-toast";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const Signup = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [validationError, setValidationError] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  const validateForm = () => {
+    if (!name || !email || !password) {
+      setValidationError('Please fill in all fields');
+      return false;
+    }
+    
+    if (password.length < 8) {
+      setValidationError('Password must be at least 8 characters');
+      return false;
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setValidationError('Please enter a valid email address');
+      return false;
+    }
+    
+    setValidationError('');
+    return true;
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
@@ -30,11 +59,11 @@ const Signup = () => {
           password,
           skills: [] // Initialize with empty skills
         }),
-        credentials: 'include'
       });
       
+      const data = await response.json();
+      
       if (response.ok) {
-        const data = await response.json();
         // Store auth token and user data
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('token', data.token);
@@ -47,20 +76,11 @@ const Signup = () => {
         
         navigate('/');
       } else {
-        const errorData = await response.json().catch(() => null);
-        toast({
-          variant: "destructive",
-          title: "Signup failed",
-          description: errorData?.message || "Please fill in all fields and try again.",
-        });
+        setValidationError(data.message || 'Registration failed. Please try again.');
       }
     } catch (error) {
       console.error('Signup error:', error);
-      toast({
-        variant: "destructive",
-        title: "Signup failed",
-        description: "An error occurred. Please try again later.",
-      });
+      setValidationError('Network error. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -77,6 +97,13 @@ const Signup = () => {
         </CardHeader>
         <form onSubmit={handleSignup}>
           <CardContent className="space-y-4">
+            {validationError && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{validationError}</AlertDescription>
+              </Alert>
+            )}
+            
             <div className="space-y-2">
               <label htmlFor="name" className="text-sm font-medium">
                 Full Name
@@ -86,7 +113,7 @@ const Signup = () => {
                 placeholder="John Smith"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -99,7 +126,7 @@ const Signup = () => {
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -112,7 +139,7 @@ const Signup = () => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
+                disabled={isLoading}
               />
               <p className="text-xs text-muted-foreground">
                 Must be at least 8 characters

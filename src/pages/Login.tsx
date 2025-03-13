@@ -24,6 +24,7 @@ const Login = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
+        credentials: 'include'
       });
       
       if (response.ok) {
@@ -40,10 +41,11 @@ const Login = () => {
         
         navigate('/');
       } else {
+        const errorData = await response.json().catch(() => null);
         toast({
           variant: "destructive",
           title: "Login failed",
-          description: "Invalid email or password. Please try again.",
+          description: errorData?.message || "Invalid email or password. Please try again.",
         });
       }
     } catch (error) {

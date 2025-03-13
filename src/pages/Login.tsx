@@ -13,29 +13,49 @@ const Login = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // This is a mock login - would connect to backend in production
-    setTimeout(() => {
-      // Simulate successful login
-      if (email && password) {
+    try {
+      const response = await fetch('http://localhost:8080/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Store auth token and user data
         localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        
         toast({
           title: "Login successful",
-          description: "Welcome back to JobMatch AI!",
+          description: `Welcome back, ${data.user.name}!`,
         });
+        
         navigate('/');
       } else {
         toast({
           variant: "destructive",
           title: "Login failed",
-          description: "Please check your credentials and try again.",
+          description: "Invalid email or password. Please try again.",
         });
       }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        variant: "destructive",
+        title: "Login failed",
+        description: "An error occurred. Please try again later.",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (

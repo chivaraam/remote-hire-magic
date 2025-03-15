@@ -31,6 +31,9 @@ public class AuthController {
         userDTO.setName(createdUser.getName());
         userDTO.setEmail(createdUser.getEmail());
         userDTO.setSkills(createdUser.getSkills());
+        userDTO.setUserType(createdUser.getUserType());
+        userDTO.setCompanyName(createdUser.getCompanyName());
+        userDTO.setIndustry(createdUser.getIndustry());
         
         // Generate mock token (in a real app, use JWT)
         String token = UUID.randomUUID().toString();
@@ -55,6 +58,9 @@ public class AuthController {
             userDTO.setName(user.getName());
             userDTO.setEmail(user.getEmail());
             userDTO.setSkills(user.getSkills());
+            userDTO.setUserType(user.getUserType());
+            userDTO.setCompanyName(user.getCompanyName());
+            userDTO.setIndustry(user.getIndustry());
             
             // Generate mock token (in a real app, use JWT)
             String token = UUID.randomUUID().toString();

@@ -21,6 +21,15 @@ public class User {
     @Column(nullable = false)
     private String password;
     
+    @Column(name = "user_type")
+    private String userType;
+    
+    @Column(name = "company_name")
+    private String companyName;
+    
+    @Column(name = "industry")
+    private String industry;
+    
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_skills", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "skill")
@@ -48,6 +57,15 @@ public class User {
     
     public String getPassword() { return password; }
     public void setPassword(String password) { this.password = password; }
+    
+    public String getUserType() { return userType; }
+    public void setUserType(String userType) { this.userType = userType; }
+    
+    public String getCompanyName() { return companyName; }
+    public void setCompanyName(String companyName) { this.companyName = companyName; }
+    
+    public String getIndustry() { return industry; }
+    public void setIndustry(String industry) { this.industry = industry; }
     
     public List<String> getSkills() { return skills; }
     public void setSkills(List<String> skills) { this.skills = skills != null ? skills : new ArrayList<>(); }

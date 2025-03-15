@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import SearchBar from '@/components/SearchBar';
@@ -69,23 +70,38 @@ const allJobs = [
 const Dashboard = () => {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
+  const [searchLocation, setSearchLocation] = useState('');
+  const [searchSkills, setSearchSkills] = useState<string[]>([]);
   const [filteredJobs, setFilteredJobs] = useState(allJobs);
 
-  const handleSearch = (term: string) => {
+  const handleSearch = (term: string, location: string, skills: string[]) => {
     setSearchTerm(term);
+    setSearchLocation(location);
+    setSearchSkills(skills);
     
-    if (!term.trim()) {
-      setFilteredJobs(allJobs);
-      return;
+    let results = allJobs;
+    
+    // Filter by search term
+    if (term.trim()) {
+      const lowerCaseTerm = term.toLowerCase();
+      results = results.filter(job => 
+        job.title.toLowerCase().includes(lowerCaseTerm) ||
+        job.company.toLowerCase().includes(lowerCaseTerm) ||
+        job.description.toLowerCase().includes(lowerCaseTerm)
+      );
     }
     
-    const lowerCaseTerm = term.toLowerCase();
-    const results = allJobs.filter(job => 
-      job.title.toLowerCase().includes(lowerCaseTerm) ||
-      job.company.toLowerCase().includes(lowerCaseTerm) ||
-      job.location.toLowerCase().includes(lowerCaseTerm) ||
-      job.skills.some(skill => skill.toLowerCase().includes(lowerCaseTerm))
-    );
+    // Filter by location
+    if (location) {
+      results = results.filter(job => job.location === location);
+    }
+    
+    // Filter by skills
+    if (skills.length > 0) {
+      results = results.filter(job => 
+        skills.some(skill => job.skills.includes(skill))
+      );
+    }
     
     setFilteredJobs(results);
   };
@@ -93,6 +109,7 @@ const Dashboard = () => {
   const handleApply = (jobId: number, jobTitle: string) => {
     console.log(`Applied for job ${jobId}: ${jobTitle}`);
     
+    // In a real application, this would send an API request
     toast({
       title: "Application Submitted",
       description: `You've successfully applied for ${jobTitle}`,
@@ -133,7 +150,12 @@ const Dashboard = () => {
         <h1 className="text-3xl font-bold mb-8">Find Your Perfect Remote Job</h1>
         
         <div className="mb-12">
-          <SearchBar onSearch={handleSearch} initialValue={searchTerm} />
+          <SearchBar 
+            onSearch={handleSearch} 
+            initialValue={searchTerm} 
+            initialLocation={searchLocation}
+            initialSkills={searchSkills}
+          />
           <p className="mt-4 text-muted-foreground">
             {filteredJobs.length} job{filteredJobs.length !== 1 ? 's' : ''} found
           </p>

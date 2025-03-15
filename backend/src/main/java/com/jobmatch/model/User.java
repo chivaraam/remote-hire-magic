@@ -30,6 +30,18 @@ public class User {
     @Column(name = "industry")
     private String industry;
     
+    @Column(name = "location")
+    private String location;
+    
+    @Column(name = "profile_title")
+    private String profileTitle;
+    
+    @Column(name = "experience_years")
+    private Integer experienceYears;
+    
+    @Column(name = "profile_summary", length = 1000)
+    private String profileSummary;
+    
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_skills", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "skill")
@@ -69,4 +81,16 @@ public class User {
     
     public List<String> getSkills() { return skills; }
     public void setSkills(List<String> skills) { this.skills = skills != null ? skills : new ArrayList<>(); }
+    
+    public String getLocation() { return location; }
+    public void setLocation(String location) { this.location = location; }
+    
+    public String getProfileTitle() { return profileTitle; }
+    public void setProfileTitle(String profileTitle) { this.profileTitle = profileTitle; }
+    
+    public Integer getExperienceYears() { return experienceYears; }
+    public void setExperienceYears(Integer experienceYears) { this.experienceYears = experienceYears; }
+    
+    public String getProfileSummary() { return profileSummary; }
+    public void setProfileSummary(String profileSummary) { this.profileSummary = profileSummary; }
 }

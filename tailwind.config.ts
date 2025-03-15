@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -26,24 +25,24 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#0EA5E9",
+          DEFAULT: "#4A90E2",
           foreground: "#FFFFFF",
         },
         secondary: {
-          DEFAULT: "#E5DEFF",
-          foreground: "#221F26",
+          DEFAULT: "#F6F7FA",
+          foreground: "#333333",
         },
         accent: {
-          DEFAULT: "#F97316",
+          DEFAULT: "#FF7555",
           foreground: "#FFFFFF",
         },
         muted: {
-          DEFAULT: "#F8FAFC",
-          foreground: "#64748B",
+          DEFAULT: "#F1F2F4",
+          foreground: "#6E6E6E",
         },
         card: {
           DEFAULT: "rgba(255, 255, 255, 0.9)",
-          foreground: "#221F26",
+          foreground: "#333333",
         },
       },
       borderRadius: {
@@ -74,6 +73,9 @@ export default {
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
         float: "float 3s ease-in-out infinite",
+      },
+      fontFamily: {
+        sans: ['Roboto', 'sans-serif'],
       },
     },
   },

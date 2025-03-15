@@ -7,11 +7,16 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 const Signup = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [userType, setUserType] = useState('jobseeker');
+  const [companyName, setCompanyName] = useState('');
+  const [industry, setIndustry] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [validationError, setValidationError] = useState('');
   const { toast } = useToast();
@@ -19,7 +24,12 @@ const Signup = () => {
 
   const validateForm = () => {
     if (!name || !email || !password) {
-      setValidationError('Please fill in all fields');
+      setValidationError('Please fill in all required fields');
+      return false;
+    }
+    
+    if (userType === 'company' && !companyName) {
+      setValidationError('Please enter your company name');
       return false;
     }
     
@@ -48,17 +58,30 @@ const Signup = () => {
     setIsLoading(true);
     
     try {
+      const userData = userType === 'company' 
+        ? { 
+            name,
+            email, 
+            password,
+            companyName,
+            industry,
+            userType,
+            skills: [] 
+          }
+        : { 
+            name,
+            email, 
+            password,
+            userType,
+            skills: [] 
+          };
+      
       const response = await fetch('http://localhost:8080/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          name,
-          email, 
-          password,
-          skills: [] // Initialize with empty skills
-        }),
+        body: JSON.stringify(userData),
       });
       
       const data = await response.json();
@@ -68,10 +91,11 @@ const Signup = () => {
         localStorage.setItem('isAuthenticated', 'true');
         localStorage.setItem('token', data.token);
         localStorage.setItem('user', JSON.stringify(data.user));
+        localStorage.setItem('userType', userType);
         
         toast({
           title: "Account created",
-          description: "Welcome to JobMatch AI!",
+          description: `Welcome to JobMatch AI${userType === 'company' ? ' for Companies' : ''}!`,
         });
         
         navigate('/');
@@ -104,18 +128,65 @@ const Signup = () => {
               </Alert>
             )}
             
+            <RadioGroup 
+              defaultValue="jobseeker" 
+              value={userType}
+              onValueChange={setUserType}
+              className="flex justify-center gap-4 pt-2 pb-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="jobseeker" id="jobseeker" />
+                <Label htmlFor="jobseeker">Job Seeker</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="company" id="company" />
+                <Label htmlFor="company">Company</Label>
+              </div>
+            </RadioGroup>
+            
             <div className="space-y-2">
               <label htmlFor="name" className="text-sm font-medium">
-                Full Name
+                {userType === 'company' ? 'Contact Person Name' : 'Full Name'}
               </label>
               <Input
                 id="name"
-                placeholder="John Smith"
+                placeholder={userType === 'company' ? "Jane Smith (HR Manager)" : "John Smith"}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={isLoading}
               />
             </div>
+            
+            {userType === 'company' && (
+              <>
+                <div className="space-y-2">
+                  <label htmlFor="companyName" className="text-sm font-medium">
+                    Company Name
+                  </label>
+                  <Input
+                    id="companyName"
+                    placeholder="Acme Corporation"
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="industry" className="text-sm font-medium">
+                    Industry
+                  </label>
+                  <Input
+                    id="industry"
+                    placeholder="Technology, Healthcare, Finance, etc."
+                    value={industry}
+                    onChange={(e) => setIndustry(e.target.value)}
+                    disabled={isLoading}
+                  />
+                </div>
+              </>
+            )}
+            
             <div className="space-y-2">
               <label htmlFor="email" className="text-sm font-medium">
                 Email
@@ -148,7 +219,7 @@ const Signup = () => {
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Creating account..." : "Create account"}
+              {isLoading ? "Creating account..." : `Create ${userType === 'company' ? 'company' : 'user'} account`}
             </Button>
             <div className="text-center text-sm">
               Already have an account?{" "}

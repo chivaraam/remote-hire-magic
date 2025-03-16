@@ -14,6 +14,8 @@ import ResumeParser from "./pages/ResumeParser";
 import RemoteAssessment from "./pages/RemoteAssessment";
 import InterviewScheduler from "./pages/InterviewScheduler";
 import MatchingAlgorithm from "./pages/MatchingAlgorithm";
+import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +35,8 @@ const App = () => (
           <Route path="/remote-assessment" element={<RemoteAssessment />} />
           <Route path="/interview-scheduler" element={<InterviewScheduler />} />
           <Route path="/matching-algorithm" element={<MatchingAlgorithm />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

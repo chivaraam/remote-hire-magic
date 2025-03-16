@@ -97,7 +97,7 @@ const SearchBar = ({
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Any Location</SelectItem>
+              <SelectItem value="any-location">Any Location</SelectItem>
               {locations.map((loc) => (
                 <SelectItem key={loc} value={loc}>{loc}</SelectItem>
               ))}

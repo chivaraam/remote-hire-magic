@@ -9,7 +9,8 @@ import {
   MessageSquare, 
   User, 
   ChevronDown,
-  Search
+  Search,
+  Settings
 } from 'lucide-react';
 
 const Header = () => {
@@ -81,7 +82,7 @@ const Header = () => {
                   <ChevronDown className="w-4 h-4 text-gray-400" />
                   
                   {/* Dropdown */}
-                  <div className="absolute right-0 top-full mt-1 w-48 bg-white shadow-lg rounded-md py-2 hidden group-hover:block">
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-white shadow-lg rounded-md py-2 hidden group-hover:block z-50">
                     <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                       View Profile
                     </Link>

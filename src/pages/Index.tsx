@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Hero from '@/components/Hero';
 import JobCard from '@/components/JobCard';
 import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import { useToast } from "@/hooks/use-toast";
 import { Building, Users, Briefcase, TrendingUp, Award } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -162,35 +163,8 @@ const Index = () => {
         </div>
       </section>
       
-      {/* App Banner Section */}
-      <section className="py-16 bg-primary">
-        <div className="naukri-container">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="text-white mb-8 md:mb-0 text-center md:text-left">
-              <h2 className="text-3xl font-bold mb-4">Download Our Mobile App</h2>
-              <p className="text-white/80 mb-6 max-w-md">
-                Job search on the go. Apply to jobs, track your applications, and get updates right from your phone.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
-                <Button className="bg-white text-primary hover:bg-white/90">
-                  Download for iOS
-                </Button>
-                <Button className="bg-white text-primary hover:bg-white/90">
-                  Download for Android
-                </Button>
-              </div>
-            </div>
-            
-            <div className="w-full max-w-xs md:max-w-sm">
-              <div className="bg-white rounded-lg p-4 shadow-lg transform rotate-3">
-                <div className="bg-gray-100 h-48 rounded-md flex items-center justify-center">
-                  <Briefcase className="w-12 h-12 text-primary/50" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Footer replaces the App Banner Section */}
+      <Footer />
     </div>
   );
 };

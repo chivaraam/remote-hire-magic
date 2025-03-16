@@ -1,218 +1,312 @@
 
-import React from 'react';
-import { Helmet } from 'react-helmet';
-import Header from '@/components/Header';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Briefcase, MapPin, Calendar, Award, User, Mail, Phone, Globe, FileText, Edit } from 'lucide-react';
+import React, { useState } from "react";
+import { Helmet } from "react-helmet";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import Header from "@/components/Header";
+import JobApplicationsList from "@/components/JobApplicationsList";
+import { PlusCircle, Save, User, Briefcase, FileText, Settings } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-  const userType = localStorage.getItem('userType') || 'jobseeker';
+  const { toast } = useToast();
+  const [userType, setUserType] = useState<"CANDIDATE" | "EMPLOYER">("CANDIDATE");
+  const [skills, setSkills] = useState<string[]>(["React", "TypeScript", "Node.js", "UI/UX Design"]);
+  const [newSkill, setNewSkill] = useState("");
 
-  // Mock user profile data
-  const profile = {
-    name: "Alex Johnson",
+  // Mock user data
+  const candidateData = {
+    name: "Jane Cooper",
     title: "Senior Frontend Developer",
-    location: "San Francisco, CA",
-    email: "alex.johnson@example.com",
+    email: "jane@example.com",
     phone: "+1 (555) 123-4567",
-    website: "alexjohnson.dev",
-    about: "Passionate frontend developer with 5+ years of experience building responsive and user-friendly web applications. Specialized in React, TypeScript, and modern JavaScript frameworks.",
-    skills: ["React", "TypeScript", "JavaScript", "HTML", "CSS", "Node.js", "Git", "Responsive Design", "UI/UX"],
-    experience: [
-      {
-        id: 1,
-        title: "Senior Frontend Developer",
-        company: "TechCorp Inc.",
-        location: "San Francisco, CA",
-        startDate: "Jan 2021",
-        endDate: "Present",
-        description: "Lead frontend development for enterprise SaaS platform. Implemented new features and optimized performance."
-      },
-      {
-        id: 2,
-        title: "Frontend Developer",
-        company: "WebSolutions",
-        location: "Portland, OR",
-        startDate: "Mar 2018",
-        endDate: "Dec 2020",
-        description: "Developed responsive web applications for clients in various industries."
-      }
-    ],
-    education: [
-      {
-        id: 1,
-        degree: "Bachelor of Science in Computer Science",
-        institution: "University of California, Berkeley",
-        year: "2014-2018"
-      }
-    ]
+    location: "San Francisco, CA",
+    experience: 5,
+    summary: "Experienced frontend developer with a focus on React and TypeScript. I'm passionate about creating beautiful, performant, and accessible web applications."
   };
 
-  if (!isAuthenticated) {
-    window.location.href = '/login';
-    return null;
-  }
+  const employerData = {
+    companyName: "TechCorp",
+    industry: "Software Development",
+    email: "hr@techcorp.com",
+    phone: "+1 (555) 987-6543",
+    location: "San Francisco, CA",
+    about: "TechCorp is a leading software development company specializing in web and mobile applications."
+  };
+
+  const handleAddSkill = () => {
+    if (newSkill.trim() && !skills.includes(newSkill.trim())) {
+      setSkills([...skills, newSkill.trim()]);
+      setNewSkill("");
+    }
+  };
+
+  const handleRemoveSkill = (skillToRemove: string) => {
+    setSkills(skills.filter(skill => skill !== skillToRemove));
+  };
+
+  const handleSaveProfile = () => {
+    toast({
+      title: "Profile Updated",
+      description: "Your profile has been successfully updated."
+    });
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <Helmet>
-        <title>Your Profile | JobMatch</title>
+        <title>My Profile | JobMatch</title>
       </Helmet>
-
       <Header />
+      <div className="container py-8 px-4 mx-auto">
+        <h1 className="text-3xl font-bold mb-6">My Profile</h1>
 
-      <main className="naukri-container py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Profile Sidebar */}
-          <Card className="md:col-span-1">
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center">
-                <Avatar className="h-24 w-24 mb-4">
-                  <AvatarImage src="/placeholder.svg" alt={profile.name} />
-                  <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <h2 className="text-xl font-bold">{profile.name}</h2>
-                <p className="text-gray-600 mb-2">{profile.title}</p>
-                <p className="text-gray-500 flex items-center text-sm mb-4">
-                  <MapPin className="w-4 h-4 mr-1" />
-                  {profile.location}
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList className="mb-2">
+            <TabsTrigger value="profile" className="flex items-center">
+              <User className="w-4 h-4 mr-2" />
+              Profile
+            </TabsTrigger>
+            <TabsTrigger value="applications" className="flex items-center">
+              <Briefcase className="w-4 h-4 mr-2" />
+              Applications
+            </TabsTrigger>
+            <TabsTrigger value="resume" className="flex items-center">
+              <FileText className="w-4 h-4 mr-2" />
+              Resume
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="flex items-center">
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile">
+            <Card>
+              <CardHeader>
+                <CardTitle>Profile Information</CardTitle>
+                <CardDescription>
+                  Update your profile information to help employers find you
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {userType === "CANDIDATE" ? (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Full Name</Label>
+                        <Input id="name" defaultValue={candidateData.name} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Professional Title</Label>
+                        <Input id="title" defaultValue={candidateData.title} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input id="email" type="email" defaultValue={candidateData.email} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone</Label>
+                        <Input id="phone" defaultValue={candidateData.phone} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="location">Location</Label>
+                        <Input id="location" defaultValue={candidateData.location} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="experience">Years of Experience</Label>
+                        <Input
+                          id="experience"
+                          type="number"
+                          defaultValue={candidateData.experience.toString()}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="summary">Professional Summary</Label>
+                      <Textarea
+                        id="summary"
+                        rows={4}
+                        defaultValue={candidateData.summary}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Skills</Label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {skills.map((skill) => (
+                          <Badge key={skill} variant="secondary" className="flex items-center gap-1">
+                            {skill}
+                            <button
+                              onClick={() => handleRemoveSkill(skill)}
+                              className="text-xs ml-1 hover:text-red-500"
+                            >
+                              ×
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Add a skill..."
+                          value={newSkill}
+                          onChange={(e) => setNewSkill(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleAddSkill();
+                            }
+                          }}
+                        />
+                        <Button type="button" onClick={handleAddSkill} size="sm">
+                          <PlusCircle className="h-4 w-4 mr-2" />
+                          Add
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="companyName">Company Name</Label>
+                        <Input id="companyName" defaultValue={employerData.companyName} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="industry">Industry</Label>
+                        <Input id="industry" defaultValue={employerData.industry} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email</Label>
+                        <Input id="email" type="email" defaultValue={employerData.email} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="phone">Phone</Label>
+                        <Input id="phone" defaultValue={employerData.phone} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="location">Location</Label>
+                        <Input id="location" defaultValue={employerData.location} />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="about">About the Company</Label>
+                      <Textarea
+                        id="about"
+                        rows={4}
+                        defaultValue={employerData.about}
+                      />
+                    </div>
+                  </>
+                )}
+
+                <div className="flex justify-end">
+                  <Button onClick={handleSaveProfile}>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Applications Tab */}
+          <TabsContent value="applications">
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {userType === "EMPLOYER" ? "Candidate Applications" : "Your Applications"}
+                </CardTitle>
+                <CardDescription>
+                  {userType === "EMPLOYER" 
+                    ? "View and respond to applications for your job postings" 
+                    : "Track the status of your job applications"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <JobApplicationsList isEmployer={userType === "EMPLOYER"} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Resume Tab */}
+          <TabsContent value="resume">
+            <Card>
+              <CardHeader>
+                <CardTitle>Resume Management</CardTitle>
+                <CardDescription>
+                  Upload and manage your resume
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground text-center py-8">
+                  Resume management features coming soon...
                 </p>
-                
-                <Button variant="outline" size="sm" className="mb-6">
-                  <Edit className="mr-1 h-4 w-4" />
-                  Edit Profile
-                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                <div className="w-full space-y-3">
-                  <div className="flex items-center text-sm">
-                    <Mail className="w-4 h-4 mr-2 text-gray-500" />
-                    <span>{profile.email}</span>
+          {/* Settings Tab */}
+          <TabsContent value="settings">
+            <Card>
+              <CardHeader>
+                <CardTitle>Account Settings</CardTitle>
+                <CardDescription>
+                  Manage your account settings and preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="space-y-2">
+                    <Label>Account Type</Label>
+                    <div className="flex gap-4">
+                      <Button
+                        variant={userType === "CANDIDATE" ? "default" : "outline"}
+                        onClick={() => setUserType("CANDIDATE")}
+                      >
+                        Job Seeker
+                      </Button>
+                      <Button
+                        variant={userType === "EMPLOYER" ? "default" : "outline"}
+                        onClick={() => setUserType("EMPLOYER")}
+                      >
+                        Employer
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center text-sm">
-                    <Phone className="w-4 h-4 mr-2 text-gray-500" />
-                    <span>{profile.phone}</span>
-                  </div>
-                  <div className="flex items-center text-sm">
-                    <Globe className="w-4 h-4 mr-2 text-gray-500" />
-                    <span>{profile.website}</span>
+                  
+                  <div className="border-t pt-6">
+                    <h3 className="font-medium mb-4">Privacy Settings</h3>
+                    <p className="text-muted-foreground text-center py-4">
+                      Privacy settings coming soon...
+                    </p>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Main Content */}
-          <div className="md:col-span-2">
-            <Tabs defaultValue="about">
-              <TabsList className="mb-4">
-                <TabsTrigger value="about">About</TabsTrigger>
-                <TabsTrigger value="experience">Experience</TabsTrigger>
-                <TabsTrigger value="education">Education</TabsTrigger>
-                <TabsTrigger value="applications">Applications</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="about">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>About Me</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-700">{profile.about}</p>
-                    
-                    <h3 className="font-semibold mt-6 mb-2">Skills</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {profile.skills.map((skill, index) => (
-                        <Badge key={index} variant="secondary">
-                          {skill}
-                        </Badge>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="experience">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Work Experience</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      {profile.experience.map((exp) => (
-                        <div key={exp.id} className="border-b pb-4 last:border-0">
-                          <h3 className="font-semibold text-lg">{exp.title}</h3>
-                          <div className="flex items-center text-gray-600 mb-2">
-                            <Briefcase className="w-4 h-4 mr-1" />
-                            {exp.company}
-                            <span className="mx-2">•</span>
-                            <MapPin className="w-4 h-4 mr-1" />
-                            {exp.location}
-                          </div>
-                          <div className="flex items-center text-gray-500 text-sm mb-2">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            {exp.startDate} - {exp.endDate}
-                          </div>
-                          <p className="text-gray-700">{exp.description}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="education">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Education</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      {profile.education.map((edu) => (
-                        <div key={edu.id} className="border-b pb-4 last:border-0">
-                          <h3 className="font-semibold text-lg">{edu.degree}</h3>
-                          <div className="flex items-center text-gray-600 mb-2">
-                            <Award className="w-4 h-4 mr-1" />
-                            {edu.institution}
-                          </div>
-                          <div className="flex items-center text-gray-500 text-sm">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            {edu.year}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="applications">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Job Applications</CardTitle>
-                    <CardDescription>Track your applications and their status</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-500 py-8 text-center">
-                      You haven't applied to any jobs yet.
-                    </p>
-                  </CardContent>
-                  <CardFooter>
-                    <Button onClick={() => window.location.href = '/dashboard'}>
-                      Browse Jobs
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
-      </main>
-    </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </>
   );
 };
 

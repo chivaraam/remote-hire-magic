@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import Header from '@/components/Header';
 import { useToast } from "@/hooks/use-toast";
+import { Helmet } from "react-helmet";
 
 // Mock jobs data (in a real app, this would come from an API)
 const allJobs = [
@@ -114,9 +115,21 @@ const JobDetail = () => {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [applicationSuccess, setApplicationSuccess] = useState(false);
+  const [userId, setUserId] = useState<number | null>(null);
   
   const jobId = parseInt(id || '0');
   const job = allJobs.find(job => job.id === jobId);
+  
+  useEffect(() => {
+    // In a real app, this would come from auth context or state management
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    if (isAuthenticated) {
+      const userIdFromStorage = localStorage.getItem('userId');
+      if (userIdFromStorage) {
+        setUserId(parseInt(userIdFromStorage));
+      }
+    }
+  }, []);
   
   if (!job) {
     return (
@@ -135,10 +148,22 @@ const JobDetail = () => {
   }
   
   const handleApply = () => {
+    const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+    
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to apply for jobs",
+        variant: "destructive",
+      });
+      navigate('/login');
+      return;
+    }
+    
     setIsApplicationDialogOpen(true);
   };
   
-  const handleSubmitApplication = () => {
+  const handleSubmitApplication = async () => {
     if (!termsAccepted) {
       toast({
         title: "Error",
@@ -148,17 +173,45 @@ const JobDetail = () => {
       return;
     }
     
+    if (!userId) {
+      toast({
+        title: "Error",
+        description: "User ID not found. Please log in again.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    // Simulate API call to submit application
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      // In a real app, this would be an API call to submit the application
+      // For demo, we'll use a timeout to simulate an API call
+      
+      // The API endpoint would be:
+      // const response = await fetch('http://localhost:8080/api/applications', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/x-www-form-urlencoded',
+      //   },
+      //   body: new URLSearchParams({
+      //     applicantId: userId.toString(),
+      //     jobId: jobId.toString(),
+      //     coverLetter: coverLetter
+      //   })
+      // });
+      
+      // For demo purposes, we'll simulate the API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
       setApplicationSuccess(true);
       
       toast({
         title: "Application Submitted",
-        description: `You've successfully applied for ${job.title}`,
+        description: `You've successfully applied for ${job.title}. The employer has been notified.`,
       });
+      
+      console.info(`Applied for job ${jobId}: ${job.title}`);
       
       // Reset form after successful submission
       setTimeout(() => {
@@ -167,11 +220,23 @@ const JobDetail = () => {
         setCoverLetter('');
         setTermsAccepted(false);
       }, 2000);
-    }, 1500);
+    } catch (error) {
+      console.error('Error submitting application:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while submitting your application. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-secondary/20">
+      <Helmet>
+        <title>{job.title} | JobMatch</title>
+      </Helmet>
       <Header />
       <div className="container px-4 py-8 mx-auto">
         <Button 
@@ -268,7 +333,7 @@ const JobDetail = () => {
             </DialogTitle>
             <DialogDescription>
               {applicationSuccess ? (
-                "Your application has been successfully submitted."
+                "Your application has been successfully submitted. The employer will be notified."
               ) : (
                 `Submit your application to ${job.company} for this position.`
               )}

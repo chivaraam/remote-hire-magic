@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import Header from "@/components/Header";
 import JobApplicationsList from "@/components/JobApplicationsList";
-import { PlusCircle, Save, User, Briefcase, FileText, Settings } from "lucide-react";
+import { PlusCircle, Save, User, Briefcase } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Profile = () => {
@@ -86,14 +86,6 @@ const Profile = () => {
             <TabsTrigger value="applications" className="flex items-center">
               <Briefcase className="w-4 h-4 mr-2" />
               Applications
-            </TabsTrigger>
-            <TabsTrigger value="resume" className="flex items-center">
-              <FileText className="w-4 h-4 mr-2" />
-              Resume
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center">
-              <Settings className="w-4 h-4 mr-2" />
-              Settings
             </TabsTrigger>
           </TabsList>
 
@@ -244,63 +236,6 @@ const Profile = () => {
               </CardHeader>
               <CardContent>
                 <JobApplicationsList isEmployer={userType === "EMPLOYER"} />
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Resume Tab */}
-          <TabsContent value="resume">
-            <Card>
-              <CardHeader>
-                <CardTitle>Resume Management</CardTitle>
-                <CardDescription>
-                  Upload and manage your resume
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-center py-8">
-                  Resume management features coming soon...
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Settings Tab */}
-          <TabsContent value="settings">
-            <Card>
-              <CardHeader>
-                <CardTitle>Account Settings</CardTitle>
-                <CardDescription>
-                  Manage your account settings and preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="space-y-2">
-                    <Label>Account Type</Label>
-                    <div className="flex gap-4">
-                      <Button
-                        variant={userType === "CANDIDATE" ? "default" : "outline"}
-                        onClick={() => setUserType("CANDIDATE")}
-                      >
-                        Job Seeker
-                      </Button>
-                      <Button
-                        variant={userType === "EMPLOYER" ? "default" : "outline"}
-                        onClick={() => setUserType("EMPLOYER")}
-                      >
-                        Employer
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  <div className="border-t pt-6">
-                    <h3 className="font-medium mb-4">Privacy Settings</h3>
-                    <p className="text-muted-foreground text-center py-4">
-                      Privacy settings coming soon...
-                    </p>
-                  </div>
-                </div>
               </CardContent>
             </Card>
           </TabsContent>

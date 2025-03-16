@@ -17,14 +17,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
 import Header from '@/components/Header';
-import { BellRing, ShieldCheck, Mail, Lock, User, Globe, Bell } from 'lucide-react';
+import { ShieldCheck, User, Globe, Bell, Lock } from 'lucide-react';
 
 const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  
+  // Mock user ID - in a real app, this would come from authentication
+  const userId = 1;
   
   // Mock settings state
   const [settings, setSettings] = useState({
@@ -66,7 +68,8 @@ const Settings = () => {
     }, 1000);
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
+    // Validation checks
     if (settings.newPassword !== settings.confirmPassword) {
       toast({
         title: "Passwords don't match",
@@ -85,23 +88,59 @@ const Settings = () => {
       return;
     }
     
+    if (!settings.currentPassword) {
+      toast({
+        title: "Current password required",
+        description: "Please enter your current password.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSaving(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setSaving(false);
-      toast({
-        title: "Password updated",
-        description: "Your password has been changed successfully.",
+    try {
+      const response = await fetch(`/api/users/${userId}/change-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword: settings.currentPassword,
+          newPassword: settings.newPassword
+        }),
       });
       
-      setSettings({
-        ...settings,
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
+      const data = await response.json();
+      
+      if (response.ok) {
+        toast({
+          title: "Password updated",
+          description: "Your password has been changed successfully.",
+        });
+        
+        setSettings({
+          ...settings,
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: '',
+        });
+      } else {
+        toast({
+          title: "Error updating password",
+          description: data.message || "Failed to update password. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Server error",
+        description: "There was a problem connecting to the server. Please try again later.",
+        variant: "destructive",
       });
-    }, 1000);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

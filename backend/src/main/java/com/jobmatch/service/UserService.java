@@ -58,4 +58,22 @@ public class UserService {
             .map(user -> passwordEncoder.matches(password, user.getPassword()))
             .orElse(false);
     }
+    
+    /**
+     * Change user's password
+     * @param id User ID
+     * @param currentPassword Current password for verification
+     * @param newPassword New password to set
+     * @return true if password changed successfully, false otherwise
+     */
+    public boolean changePassword(Long id, String currentPassword, String newPassword) {
+        return userRepository.findById(id)
+            .filter(user -> passwordEncoder.matches(currentPassword, user.getPassword()))
+            .map(user -> {
+                user.setPassword(passwordEncoder.encode(newPassword));
+                userRepository.save(user);
+                return true;
+            })
+            .orElse(false);
+    }
 }

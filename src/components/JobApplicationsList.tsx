@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Table, 
@@ -30,7 +29,7 @@ const mockApplications = [
     jobTitle: "Senior Frontend Developer",
     company: "TechCorp",
     appliedDate: "2023-06-12T14:22:10",
-    status: "PENDING",
+    status: "PENDING" as const,
     employerNotes: ""
   },
   {
@@ -39,7 +38,7 @@ const mockApplications = [
     jobTitle: "UX/UI Designer",
     company: "DesignWave",
     appliedDate: "2023-06-01T09:15:45",
-    status: "ACCEPTED",
+    status: "ACCEPTED" as const,
     employerNotes: "Great fit for our team. We'd like to schedule an interview."
   },
   {
@@ -48,7 +47,7 @@ const mockApplications = [
     jobTitle: "DevOps Engineer",
     company: "CloudSys",
     appliedDate: "2023-05-20T16:30:22",
-    status: "REJECTED",
+    status: "REJECTED" as const,
     employerNotes: "We're looking for someone with more Kubernetes experience."
   }
 ];
@@ -87,7 +86,7 @@ const JobApplicationsList = ({ isEmployer = false }: JobApplicationsListProps) =
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
   
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: "PENDING" | "ACCEPTED" | "REJECTED") => {
     switch (status) {
       case "PENDING":
         return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">

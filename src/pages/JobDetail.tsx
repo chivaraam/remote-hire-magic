@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -29,8 +28,8 @@ import {
 import Header from '@/components/Header';
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet";
+import { useNotificationService } from '@/utils/notificationService';
 
-// Mock jobs data (in a real app, this would come from an API)
 const allJobs = [
   {
     id: 1,
@@ -110,23 +109,26 @@ const JobDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { createNotification } = useNotificationService();
   const [isApplicationDialogOpen, setIsApplicationDialogOpen] = useState(false);
   const [coverLetter, setCoverLetter] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [applicationSuccess, setApplicationSuccess] = useState(false);
   const [userId, setUserId] = useState<number | null>(null);
+  const [userName, setUserName] = useState<string>('');
   
   const jobId = parseInt(id || '0');
   const job = allJobs.find(job => job.id === jobId);
   
   useEffect(() => {
-    // In a real app, this would come from auth context or state management
     const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
     if (isAuthenticated) {
       const userIdFromStorage = localStorage.getItem('userId');
       if (userIdFromStorage) {
         setUserId(parseInt(userIdFromStorage));
+        
+        setUserName('Jane Doe');
       }
     }
   }, []);
@@ -185,35 +187,29 @@ const JobDetail = () => {
     setIsSubmitting(true);
     
     try {
-      // In a real app, this would be an API call to submit the application
-      // For demo, we'll use a timeout to simulate an API call
-      
-      // The API endpoint would be:
-      // const response = await fetch('http://localhost:8080/api/applications', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/x-www-form-urlencoded',
-      //   },
-      //   body: new URLSearchParams({
-      //     applicantId: userId.toString(),
-      //     jobId: jobId.toString(),
-      //     coverLetter: coverLetter
-      //   })
-      // });
-      
-      // For demo purposes, we'll simulate the API call
       await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      if (job) {
+        createNotification({
+          type: 'new_application',
+          jobId: job.id,
+          jobTitle: job.title,
+          company: job.company,
+          applicantName: userName,
+          employerId: 1,
+          status: 'PENDING'
+        });
+      }
       
       setApplicationSuccess(true);
       
       toast({
         title: "Application Submitted",
-        description: `You've successfully applied for ${job.title}. The employer has been notified.`,
+        description: `You've successfully applied for ${job?.title}. The employer has been notified.`,
       });
       
-      console.info(`Applied for job ${jobId}: ${job.title}`);
+      console.info(`Applied for job ${jobId}: ${job?.title}`);
       
-      // Reset form after successful submission
       setTimeout(() => {
         setIsApplicationDialogOpen(false);
         setApplicationSuccess(false);
@@ -235,7 +231,7 @@ const JobDetail = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-secondary/20">
       <Helmet>
-        <title>{job.title} | JobMatch</title>
+        <title>{job?.title} | JobMatch</title>
       </Helmet>
       <Header />
       <div className="container px-4 py-8 mx-auto">

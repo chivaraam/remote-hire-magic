@@ -1,121 +1,145 @@
 
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useToast } from "@/hooks/use-toast";
-import { 
-  Briefcase, 
-  Bell, 
-  MessageSquare, 
-  User, 
-  ChevronDown,
-  Search,
-  Settings
-} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Menu, LogOut, Settings, User, FileText } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import NotificationsPanel from './NotificationsPanel';
 
 const Header = () => {
+  const location = useLocation();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
-  const userType = localStorage.getItem('userType') || 'jobseeker';
-
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userId, setUserId] = useState<number>(1);
+  const [userType, setUserType] = useState<'EMPLOYER' | 'APPLICANT'>('APPLICANT');
+  
+  useEffect(() => {
+    // In a real app, this would be handled by an auth context
+    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
+    setIsAuthenticated(authStatus);
+    
+    // In a real app, these would come from the user profile
+    // For demo, we'll set a default
+    const storedUserId = localStorage.getItem('userId');
+    if (storedUserId) {
+      setUserId(parseInt(storedUserId));
+    }
+    
+    // For demo purposes, let's say the user is an applicant by default
+    // In a real app, this would come from the user profile
+    const storedUserType = localStorage.getItem('userType');
+    if (storedUserType) {
+      setUserType(storedUserType as 'EMPLOYER' | 'APPLICANT');
+    }
+  }, []);
+  
   const handleLogout = () => {
     localStorage.removeItem('isAuthenticated');
-    localStorage.removeItem('userType');
-    toast({
-      title: "Logged out",
-      description: "You have been successfully logged out.",
-    });
-    navigate('/');
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
   };
-
+  
   return (
-    <header className="w-full py-3 bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-      <div className="naukri-container">
-        <div className="flex items-center justify-between">
-          {/* Logo and Nav */}
-          <div className="flex items-center space-x-8">
-            <Link to="/" className="text-2xl font-bold text-primary">
-              JobMatch
-            </Link>
-            
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link to="/dashboard" className="text-sm font-medium text-gray-600 hover:text-primary flex items-center">
-                <Briefcase className="w-4 h-4 mr-1" />
+    <header className="bg-background border-b sticky top-0 z-10">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center">
+          <Link to="/" className="text-xl font-bold text-primary mr-8">JobMatch</Link>
+          
+          {isAuthenticated && (
+            <nav className="hidden md:flex space-x-6">
+              <Link to="/dashboard" className={`text-sm font-medium ${location.pathname === '/dashboard' ? 'text-primary' : 'text-foreground/80 hover:text-foreground'}`}>
                 Jobs
               </Link>
-              
-              {userType === 'company' && (
-                <Link to="/post-job" className="text-sm font-medium text-gray-600 hover:text-primary">
-                  Post a Job
-                </Link>
-              )}
-              
-              <Link to="/matching-algorithm" className="text-sm font-medium text-gray-600 hover:text-primary">
-                Matching
+              <Link to="/applications" className={`text-sm font-medium ${location.pathname === '/applications' ? 'text-primary' : 'text-foreground/80 hover:text-foreground'}`}>
+                Applications
               </Link>
-              
-              <Link to="/resume-parser" className="text-sm font-medium text-gray-600 hover:text-primary">
-                Resume
+              <Link to="/resume-parser" className={`text-sm font-medium ${location.pathname === '/resume-parser' ? 'text-primary' : 'text-foreground/80 hover:text-foreground'}`}>
+                Resume Parser
+              </Link>
+              <Link to="/interview-scheduler" className={`text-sm font-medium ${location.pathname === '/interview-scheduler' ? 'text-primary' : 'text-foreground/80 hover:text-foreground'}`}>
+                Interviews
               </Link>
             </nav>
-          </div>
+          )}
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          {isAuthenticated ? (
+            <>
+              <NotificationsPanel userId={userId} userType={userType} />
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src="/placeholder.svg" alt="Profile" />
+                      <AvatarFallback>JD</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/applications')}>
+                    <FileText className="mr-2 h-4 w-4" />
+                    <span>Applications</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/settings')}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Settings</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <>
+              <Button variant="ghost" onClick={() => navigate('/login')}>
+                Log in
+              </Button>
+              <Button onClick={() => navigate('/signup')}>Sign up</Button>
+            </>
+          )}
           
-          {/* Auth Actions */}
-          <div className="flex items-center space-x-4">
-            {isAuthenticated ? (
-              <>
-                <div className="hidden md:flex items-center space-x-4">
-                  <button className="text-gray-600 hover:text-primary">
-                    <Bell className="w-5 h-5" />
-                  </button>
-                  <button className="text-gray-600 hover:text-primary">
-                    <MessageSquare className="w-5 h-5" />
-                  </button>
-                </div>
-                
-                <div className="flex items-center space-x-1 cursor-pointer group relative">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <User className="w-4 h-4" />
-                  </div>
-                  <span className="text-sm font-medium hidden md:inline-block">My Profile</span>
-                  <ChevronDown className="w-4 h-4 text-gray-400" />
-                  
-                  {/* Dropdown */}
-                  <div className="absolute right-0 top-full mt-1 w-48 bg-white shadow-lg rounded-md py-2 hidden group-hover:block z-50">
-                    <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      View Profile
-                    </Link>
-                    <Link to="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                      Settings
-                    </Link>
-                    <button 
-                      onClick={handleLogout}
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => navigate('/login')}
-                  className="text-gray-600 hover:text-primary hover:bg-transparent"
-                >
-                  Login
-                </Button>
-                <Button 
-                  onClick={() => navigate('/signup')}
-                  className="bg-primary hover:bg-primary/90"
-                >
-                  Register
-                </Button>
-              </>
-            )}
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate('/dashboard')}>
+                Jobs
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/applications')}>
+                Applications
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/resume-parser')}>
+                Resume Parser
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/interview-scheduler')}>
+                Interviews
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

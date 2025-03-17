@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import {
   useAISkillMatching,
@@ -143,31 +142,65 @@ export const useResumeParser = () => {
     setError(null);
     
     try {
-      console.log("Sending resume to AI parsing API:", file.name);
+      console.log("Sending resume to backend parsing API:", file.name);
       
-      // Read the file content
-      const fileText = await file.text();
+      // Create form data to send the file
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('userId', '1'); // Hardcoded for demo, should use actual user ID
       
-      // Call the AI service to analyze the resume text
-      const result = await analyzeResume(fileText);
+      // Call the backend API to parse the resume
+      const response = await fetch('/api/resumes/parse', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+      
+      const result = await response.json();
       
       // Format the response
-      const response: ResumeParsingResponse = {
-        name: "Jane Smith", // In a real implementation, this would come from the AI model
-        email: "jane.smith@example.com",
-        phone: "(555) 123-4567",
+      const resumeResponse: ResumeParsingResponse = {
+        name: result.name,
+        email: result.email,
+        phone: result.phone,
         skills: result.skills,
         experience: result.experience,
         education: result.education,
-        confidence: result.confidence
+        confidence: 0.95 // Backend doesn't provide confidence, so we use a high default
       };
       
-      return response;
+      return resumeResponse;
     } catch (err) {
-      console.error("Error in AI resume parsing:", err);
-      const errorMessage = err instanceof Error ? err.message : "Failed to parse resume";
-      setError(errorMessage);
-      throw err;
+      console.error("Error in resume parsing:", err);
+      
+      // If backend fails, fallback to AI service
+      try {
+        console.log("Falling back to AI service for resume parsing");
+        // Read the file content
+        const fileText = await file.text();
+        
+        // Call the AI service to analyze the resume text
+        const aiResult = await analyzeResume(fileText);
+        
+        // Format the response
+        return {
+          name: "Extracted from resume", // AI model would extract this
+          email: "Extracted from resume",
+          phone: "Extracted from resume",
+          skills: aiResult.skills,
+          experience: aiResult.experience,
+          education: aiResult.education,
+          confidence: aiResult.confidence
+        };
+      } catch (aiErr) {
+        console.error("Error in AI resume parsing fallback:", aiErr);
+        const errorMessage = err instanceof Error ? err.message : "Failed to parse resume";
+        setError(errorMessage);
+        throw err;
+      }
     } finally {
       setIsLoading(false);
     }

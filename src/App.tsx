@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +16,7 @@ import InterviewScheduler from "./pages/InterviewScheduler";
 import MatchingAlgorithm from "./pages/MatchingAlgorithm";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
+import Applications from "./pages/Applications";
 
 const queryClient = new QueryClient();
 

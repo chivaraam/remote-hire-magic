@@ -1,110 +1,151 @@
 
-import React, { useState } from 'react';
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetHeader, 
-  SheetTitle, 
-  SheetTrigger 
-} from "@/components/ui/sheet";
-import { Bell } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import ApplicationNotification from './ApplicationNotification';
-import { useNotificationService, ApplicationNotificationData } from '@/utils/notificationService';
+import { 
+  useNotificationService, 
+  ApplicationNotificationData 
+} from '@/utils/notificationService';
+import { Bell } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
-type NotificationsPanelProps = {
+interface NotificationsPanelProps {
+  isOpen: boolean;
+  onClose: () => void;
   userId: number;
   userType: 'EMPLOYER' | 'APPLICANT';
-};
+}
 
-const NotificationsPanel = ({ userId, userType }: NotificationsPanelProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+const NotificationsPanel = ({
+  isOpen,
+  onClose,
+  userId,
+  userType
+}: NotificationsPanelProps) => {
+  const [notifications, setNotifications] = useState<ApplicationNotificationData[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { 
     getNotifications, 
     getUnreadCount, 
     markAsRead, 
     markAllAsRead 
   } = useNotificationService();
-  
-  const notifications = getNotifications(userId, userType);
-  const unreadCount = getUnreadCount(userId, userType);
-  
-  const handleNotificationClick = (notificationId: string) => {
-    markAsRead(notificationId);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Fetch notifications when panel opens
+      loadNotifications();
+    }
+  }, [isOpen, userId, userType]);
+
+  const loadNotifications = () => {
+    const userNotifications = getNotifications(userId, userType);
+    setNotifications(userNotifications);
+    setUnreadCount(getUnreadCount(userId, userType));
   };
-  
+
+  const handleMarkAsRead = (notificationId: string) => {
+    markAsRead(notificationId);
+    loadNotifications();
+  };
+
   const handleMarkAllAsRead = () => {
     markAllAsRead(userId, userType);
+    loadNotifications();
   };
-  
+
   const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-    
-    if (diffMins < 60) {
-      return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
-    } else if (diffHours < 24) {
-      return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
-    } else {
-      return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    try {
+      return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
+    } catch (e) {
+      console.error("Error formatting timestamp:", e);
+      return "recently";
     }
   };
-  
+
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          {unreadCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-5 min-w-[20px] p-0 flex items-center justify-center">
-              {unreadCount}
-            </Badge>
-          )}
-        </Button>
-      </SheetTrigger>
-      <SheetContent className="w-[380px] sm:w-[450px]">
-        <SheetHeader className="flex flex-row items-center justify-between pb-4 border-b">
-          <SheetTitle>Notifications</SheetTitle>
-          {notifications.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={handleMarkAllAsRead}>
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent className="w-full sm:max-w-md">
+        <SheetHeader>
+          <div className="flex justify-between items-center">
+            <SheetTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5" />
+              Notifications
+              {unreadCount > 0 && (
+                <span className="bg-primary text-xs text-white rounded-full px-2 py-1">
+                  {unreadCount}
+                </span>
+              )}
+            </SheetTitle>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleMarkAllAsRead}
+              disabled={unreadCount === 0}
+            >
               Mark all as read
             </Button>
-          )}
+          </div>
         </SheetHeader>
-        
-        <div className="mt-4 overflow-y-auto max-h-[80vh]">
-          {notifications.length === 0 ? (
-            <div className="text-center py-8">
-              <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-              <h3 className="text-lg font-medium mb-1">No notifications</h3>
-              <p className="text-muted-foreground">
-                {userType === 'EMPLOYER' 
-                  ? "You'll be notified when candidates apply for your job postings." 
-                  : "You'll be notified when there are updates to your job applications."}
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {notifications.map((notification: ApplicationNotificationData) => (
-                <ApplicationNotification
-                  key={notification.id}
-                  type={notification.type}
-                  jobTitle={notification.jobTitle}
-                  company={notification.company}
-                  applicantName={notification.applicantName}
-                  status={notification.status}
-                  time={formatTime(notification.timestamp)}
-                  isRead={notification.isRead}
-                  onMarkAsRead={() => handleNotificationClick(notification.id)}
-                />
-              ))}
-            </div>
-          )}
+
+        <div className="mt-6">
+          <Tabs defaultValue="all">
+            <TabsList className="w-full">
+              <TabsTrigger value="all" className="flex-1">All</TabsTrigger>
+              <TabsTrigger value="unread" className="flex-1">Unread</TabsTrigger>
+            </TabsList>
+            <TabsContent value="all" className="mt-4 space-y-2">
+              {notifications.length > 0 ? (
+                notifications.map(notification => (
+                  <ApplicationNotification
+                    key={notification.id}
+                    type={notification.type}
+                    jobTitle={notification.jobTitle}
+                    company={notification.company}
+                    applicantName={notification.applicantName}
+                    status={notification.status}
+                    time={formatTime(notification.timestamp)}
+                    isRead={notification.isRead}
+                    onMarkAsRead={() => handleMarkAsRead(notification.id)}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>No notifications</p>
+                </div>
+              )}
+            </TabsContent>
+            <TabsContent value="unread" className="mt-4 space-y-2">
+              {notifications.filter(n => !n.isRead).length > 0 ? (
+                notifications
+                  .filter(n => !n.isRead)
+                  .map(notification => (
+                    <ApplicationNotification
+                      key={notification.id}
+                      type={notification.type}
+                      jobTitle={notification.jobTitle}
+                      company={notification.company}
+                      applicantName={notification.applicantName}
+                      status={notification.status}
+                      time={formatTime(notification.timestamp)}
+                      isRead={notification.isRead}
+                      onMarkAsRead={() => handleMarkAsRead(notification.id)}
+                    />
+                  ))
+              ) : (
+                <div className="text-center py-12 text-muted-foreground">
+                  <p>No unread notifications</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </SheetContent>
     </Sheet>

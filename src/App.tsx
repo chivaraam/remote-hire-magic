@@ -17,6 +17,7 @@ import MatchingAlgorithm from "./pages/MatchingAlgorithm";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import Applications from "./pages/Applications";
+import TestAI from "./pages/TestAI";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/applications" element={<Applications />} />
+          <Route path="/test-ai" element={<TestAI />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

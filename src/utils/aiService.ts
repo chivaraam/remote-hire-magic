@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import {
   useAISkillMatching,
@@ -163,13 +164,13 @@ export const useResumeParser = () => {
       
       // Format the response
       const resumeResponse: ResumeParsingResponse = {
-        name: result.name,
-        email: result.email,
-        phone: result.phone,
-        skills: result.skills,
-        experience: result.experience,
-        education: result.education,
-        confidence: 0.95 // Backend doesn't provide confidence, so we use a high default
+        name: result.name || "Not found",
+        email: result.email || "Not found",
+        phone: result.phone || "Not found",
+        skills: result.skills || [],
+        experience: result.experience || [],
+        education: result.education || [],
+        confidence: result.confidence || 0.95 // Backend doesn't provide confidence, so we use a high default
       };
       
       return resumeResponse;
@@ -185,21 +186,25 @@ export const useResumeParser = () => {
         // Call the AI service to analyze the resume text
         const aiResult = await analyzeResume(fileText);
         
+        if (!aiResult) {
+          throw new Error("AI service returned empty result");
+        }
+        
         // Format the response
         return {
-          name: "Extracted from resume", // AI model would extract this
+          name: aiResult.skills ? "Extracted from resume" : "Not found", // AI model would extract this
           email: "Extracted from resume",
           phone: "Extracted from resume",
-          skills: aiResult.skills,
-          experience: aiResult.experience,
-          education: aiResult.education,
-          confidence: aiResult.confidence
+          skills: aiResult.skills || [],
+          experience: aiResult.experience || [],
+          education: aiResult.education || [],
+          confidence: aiResult.confidence || 0.7
         };
       } catch (aiErr) {
         console.error("Error in AI resume parsing fallback:", aiErr);
         const errorMessage = err instanceof Error ? err.message : "Failed to parse resume";
         setError(errorMessage);
-        throw err;
+        throw new Error(errorMessage);
       }
     } finally {
       setIsLoading(false);

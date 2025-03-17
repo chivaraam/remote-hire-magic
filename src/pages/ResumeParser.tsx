@@ -20,7 +20,10 @@ const ResumeParser = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+      const selectedFile = e.target.files[0];
+      setFile(selectedFile);
+      // Reset any previous parsing data
+      setParsedData(null);
     }
   };
 
@@ -67,9 +70,13 @@ const ResumeParser = () => {
         description: "Your skills and experience have been extracted",
       });
     } catch (err) {
+      // Clear interval on error
+      clearInterval(progressInterval);
+      setParsingProgress(0);
+      
       toast({
         title: "Parsing Failed",
-        description: "There was an error parsing your resume. Please try again.",
+        description: error || "There was an error parsing your resume. Please try again.",
         variant: "destructive",
       });
     }

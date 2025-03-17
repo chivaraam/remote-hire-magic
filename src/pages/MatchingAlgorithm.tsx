@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
@@ -28,14 +27,14 @@ const MatchingAlgorithm = () => {
     setMatchedJobs([]);
     setAnalysisDetails(null);
 
-    // Simulate progress updates during AI processing
+    // Setup progress updates
     const progressInterval = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 90) {
           clearInterval(progressInterval);
           return 90;
         }
-        return prev + 10;
+        return prev + 5;
       });
     }, 300);
 
@@ -79,7 +78,7 @@ const MatchingAlgorithm = () => {
           <CardHeader>
             <CardTitle>Your Skills Profile</CardTitle>
             <CardDescription>
-              Our AI will match jobs to your skills profile
+              Our AI will match jobs to your skills profile using the Hugging Face API
             </CardDescription>
           </CardHeader>
           <CardContent>
